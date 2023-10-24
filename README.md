@@ -442,3 +442,276 @@ Y para que el index.js reconozca los cambios que se hacen, se agrega la siguient
     app.use(express.json())
 
 Para que trabaje con objetos JSON mediante express
+
+---
+
+### Cargar archivos
+
+Lo primero que se necesita es una dependencia llamada multer (previamente instalada).
+
+Multer funciona como una especie de middleware entre la ruta y el controlador.
+
+Primero se hará por parte de la ruta y luego se abstraerá el funcionamiento hacia el controlador.
+
+Lo primero entonces es crear una ruta llamada storage.js
+
+Dentro de este archivo se importará multer, express y la propiedad de express llamada router.
+
+    const multer = require ("multer");
+    const express = require ("express");
+    const router = express.Router();
+
+Luego, lo primero que se hace es decirle a multer que haga uso del método disco de almacenamiento (diskStorage) como objeto, allí irán 2 funciones:
+- Destination: Es donde se guardarán los archivos, recibe como parámetros request, file y una función callback (cb).
+En la función de callback recibe 2 argumentos: el primero es un error (si existe) y como segundo argumento un string que hace relación al destination (ubicación donde se guardará el archivo)
+
+- Filename: Es el nombre como quedarán guardados los archivos.
+Acepta los mismos argumentos que destination; acepta diferentes estrategias de almacenamiento, dependiendo de la utilidad de almacenamiento, si se puede sobreescribir el mismo archivo, o si se pueden ir generando nombres aleatoriamente para que nunca se pueda sobreescribir un archivo (para este ejemplo se hará uso de la segunda estrategia). 
+
+Lo primero que hará, será extraer la extensión del archivo (mp3, png, jpg, pdf, etc...)
+
+Luego se le dará un nombre al archivo de la forma file -[fecha en formato unix].extensión.
+
+El código quedaría de la siguiente manera:
+
+    const storage = multer.diskStorage({
+        destination:function(req, file, cb){
+            // La ruta de almacenamiento es este directorio, retrocede una carpeta y que lo guarde en la carpeta storage
+            const pathStorage = `${__dirname}/../storage`;
+            cb(null, pathStorage)
+
+        },filename:function(req, file, cb){
+            /**Los archivos tienen una extensión, lo primero que se hará es sacarla */
+            const ext = file.originalname.split(".").pop()//Devuelve ["name","extensión"], .pop() para coger el último valor
+            const filename = `file-${Date.now()}.${ext}` //Devuelve la marca de tiempo actual en formato unix 
+            
+            cb(null,filename)
+
+        }
+
+    })
+
+Luego se creará un middleware, que hace el papel de checkpoint, el cual va a indicar el archivo que se va a subir al servidor, para luego hacer uso de este en el método post.
+
+    // Uso del middleware
+    const uploadMiddleware = multer({
+        storage:storage
+
+    })
+
+    // Método post
+    router.post("/",uploadMiddleware.single("myfile"),(req,res)=>{
+        res.send({a:1});
+
+
+    });
+
+Tener en cuenta que cuando se meciona el método post, "myfile" es la llave con la que se guarda desde postman
+
+El código completo quedaría de la siguiente manera;
+
+    const multer = require ("multer");
+    const express = require ("express");
+    const router = express.Router();
+    /**
+    * Primero decirle a multer que haga uso del método disco de almacenamiento, donde se le pasará una
+    * configuración como objeto.
+    * 
+    * Dentro de diskStorage (disco de almacenamiento) irán 2 funciones: destination y filename
+    * 
+    * - Destination recibe como parámetros request, file, una función callback
+    */
+
+    const storage = multer.diskStorage({
+        destination:function(req, file, cb){
+            // La ruta de almacenamiento es este directorio, retrocede una carpeta y que lo guarde en la carpeta storage
+            const pathStorage = `${__dirname}/../storage`;
+            cb(null, pathStorage)
+
+        },filename:function(req, file, cb){
+            /**Los archivos tienen una extensión, lo primero que se hará es sacarla */
+            const ext = file.originalname.split(".").pop()//Devuelve ["name","extensión"], .pop() para coger el último valor
+            const filename = `file-${Date.now()}.${ext}` //Devuelve la marca de tiempo actual en formato unix 
+            
+            cb(null,filename)
+
+        }
+
+    })
+
+    // Uso del middleware
+    const uploadMiddleware = multer({
+        storage:storage
+
+    })
+
+    // Método post
+    router.post("/",uploadMiddleware.single("myfile"),(req,res)=>{
+        res.send({a:1});
+
+
+    });
+
+    module.exports = router;
+
+Ahora se procede a abstraer el código para que la ruta no esté combinada con esta utilidad.
+
+Entonces, en la carpeta de utils, que es donde van los helpers, se crea un nuevo archivo llamado handleStorage.js
+
+Dentro de handle storage se hará lo siguiente:
+
+Primero cortar desde la constante storage hasta la creación del middleware y pegarla aquí, al igual que la importación del multer y exportar el uploadMiddleware para poderlo usar en storage.
+
+Finalmente, se va a extraer todo el controlador y se llevará a un controlador de almacenamiento.
+
+Entonces, se puede duplicar el controlador ya creado de tracks y se hacen las siguientes modificaciones:
+
+Primero que todo se cambia la constante a storageModel, en getItems se cambia el modelo y quedaría así:
+
+    const { storageModel } = require('../models')
+
+    // Obtener lista de la base de datos
+    const getItems= async (req,res)=>{
+        const data = await storageModel.find({})
+
+        res.send({ data })
+    };
+    //Obtener un detalle
+    const getItem=(req,res)=>{
+
+    };
+    // Crear un registro
+    const createItem=async(req,res)=>{
+        const body = req.body;
+        console.log(body);
+        const data = await storageModel.create(body)
+        res.send({data})
+
+    };
+    // Actualizar un registro
+    const updateItem=(req,res)=>{
+
+    };
+    // Eliminar un registro
+    const deleteteItem=(req,res)=>{
+
+    };
+
+    module.exports={ getItems,getItem,createItem,updateItem,deleteteItem }
+
+Posteriormente copiar el nombre de create item e ir a las rutas de storage, importar el controlador de create item y en el método post, poner esto: ", createItem" (sin comillas); quedaría de la siguiente manera:
+
+    const { createItem } = require ("../controllers/storage")
+    router.post("/",uploadMiddleware.single("myfile"), createItem);
+
+Luego, como lo que quiero es guardar un registro en la base de datos, entonces se abrirá el modelo declarado para storage.
+
+Antes modificar el controlador de storage, necesito ir a index.js para que tenga en cuenta una configuración de datos públicos y agrego este código: 
+
+    app.use(express.static("storage"))
+
+Para que los saque de la carpeta llamada storage; para poner la prueba se puede ir al navegador y poner:
+http://localhost:3300/[nombre del archivo].[extension ]
+
+mostrará el archivo con el que se está trabajando.
+
+Luego en .env y .env.example poner en public url de la siguiente manera:
+
+    PUBLIC_URL = HTTP://localhost:3300 (aquí se puede configurar de acuerdo al subdominio o al dominio)
+
+Luego ir al controlador de create item para el storage, y agregarle la url = 
+
+Así el código final del handleStorage, el controller del storage, la ruta de storage y el archivo .env quedaría de la siguiente manera:
+**HandleStorage:**
+
+    const multer = require ("multer");
+
+    /**
+    * Primero decirle a multer que haga uso del método disco de almacenamiento, donde se le pasará una
+    * configuración como objeto.
+    * 
+    * Dentro de diskStorage (disco de almacenamiento) irán 2 funciones: destination y filename
+    * 
+    * - Destination recibe como parámetros request, file, una función callback
+    */
+
+    const storage = multer.diskStorage({
+        destination:function(req, file, cb){
+            // La ruta de almacenamiento es este directorio, retrocede una carpeta y que lo guarde en la carpeta storage
+            const pathStorage = `${__dirname}/../storage`;
+            cb(null, pathStorage)
+
+        },filename:function(req, file, cb){
+            /**Los archivos tienen una extensión, lo primero que se hará es sacarla */
+            const ext = file.originalname.split(".").pop()//Devuelve ["name","extensión"], .pop() para coger el último valor
+            const filename = `file-${Date.now()}.${ext}` //Devuelve la marca de tiempo actual en formato unix 
+            
+            cb(null,filename)
+
+        }
+
+    })
+
+    // Uso del middleware
+    const uploadMiddleware = multer({
+        storage:storage
+
+    })
+
+    module.exports = uploadMiddleware;
+
+**Controller de storage:**
+    
+    const { storageModel } = require('../models')
+    const PUBLIC_URL = process.env.PUBLIC_URL;
+
+    // Obtener lista de la base de datos
+    const getItems= async (req,res)=>{
+        const data = await storageModel.find({})
+
+        res.send({ data })
+    };
+    //Obtener un detalle
+    const getItem=(req,res)=>{
+
+    };
+    // Crear un registro
+    const createItem=async(req,res)=>{
+        const { body, file } = req;
+        console.log(file);
+        const fileData = {
+            filename: file.filename,
+            url: `${PUBLIC_URL}/${file.filename}`
+        }
+        const data = await storageModel.create(fileData)
+        res.send({data})
+
+    };
+    // Actualizar un registro
+    const updateItem=(req,res)=>{
+
+    };
+    // Eliminar un registro
+    const deleteteItem=(req,res)=>{
+
+    };
+
+    module.exports={ getItems,getItem,createItem,updateItem,deleteteItem }
+
+**Ruta de storage:**
+    const uploadMiddleware = require("../utils/handleStorage")
+    const express = require ("express");
+    const { createItem } = require ("../controllers/storage")
+    const router = express.Router();
+
+    // Método post
+    router.post("/",uploadMiddleware.single("myfile"), createItem);
+
+    module.exports = router;
+
+**Archivo .env:**
+
+    PORT = 3300
+    DB_URI = mongodb+srv://brianpadim:TFbe5bbPfgAEwVNQ@cluster0.iq1y6c3.mongodb.net/dbapi?retryWrites=true&w=majority
+    PUBLIC_URL = HTTP://localhost:3300
+
