@@ -715,3 +715,8 @@ Así el código final del handleStorage, el controller del storage, la ruta de s
     DB_URI = mongodb+srv://brianpadim:TFbe5bbPfgAEwVNQ@cluster0.iq1y6c3.mongodb.net/dbapi?retryWrites=true&w=majority
     PUBLIC_URL = HTTP://localhost:3300
 
+
+---
+
+### Validaciones (validators)
+
