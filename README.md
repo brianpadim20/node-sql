@@ -26,7 +26,9 @@ Luego aparece una ventana donde pide usuario y contraseña, poner un usuario, po
 
 Donde se pedirá las IPs que pueden conectarse a la base de datos, para este curso se dejará que cualquiera se conecte, para esto se pone 0.0.0.0/0, en descripción se le puede poner "cualquier IP". Posteriormente click en "Finish and close" y creará el usuario.
 
-### Conectar la base de datos
+---
+
+## Conectar la base de datos
 
 Para esto se necesitará el URI.
 
@@ -51,7 +53,7 @@ Esa URL se guardará para ser usada en la estructura de la aplicación
 
 ---
 
-### Iniciando el proyecto
+## Iniciando el proyecto
 
 en la consola ir al directorio sobre el cual se va a trabajar
 
@@ -100,7 +102,7 @@ El node_modules puede ir incluído en este archivo, porque es una buena práctic
 
 ---
 
-### Ejercicio con express
+## Ejercicio con express
 
 Este ejercicio se hará para confirmar que todo esté instalado de forma correcta.
 
@@ -127,7 +129,7 @@ Y estará bien ejecutada
 
 ---
 
-### Variables de entorno
+## Variables de entorno
 
 Es el archivo .env, entonces, en el directorio crear un archivo llamado .env.example, dentro de este archivo se declarará una palabra (variable de entorno) que se podrá usar en la aplicación, ejemplo:
 
@@ -166,7 +168,7 @@ Se crearán diferentes directorios (carpetas)
 
 ---
 
-### Instalación de la dependencia de mongoose 
+## Instalación de la dependencia de mongoose 
 
 Para empezar a trabajar con bases de datos no relacionales se requiere la dependencia de mongoose:
 
@@ -176,7 +178,7 @@ Este paquete ayudará a gestionar la conexión a la base de datos con mongo
 
 ---
 
-### Creación de la conexión
+## Creación de la conexión
 
 Se conectará con la base de datos creada en mongo atlas.
 
@@ -222,7 +224,7 @@ Posteriormente invocar esta función:
 
 ---
 
-### Declaración de los modelos:
+## Declaración de los modelos:
 
 Siguiento el patrón MVC se declaran los modelos, estos hacen referencia a la estructura de el dato que existirá en la base de datos.
 
@@ -272,7 +274,7 @@ Una vez hecho esto ya se tiene el modelo declarado, y se pueden declarar los mod
 
 ---
 
-### Router
+## Router
 
 Se va a devolver un objeto o una propiedad en una estructura JSON, por eso esto es una API Rest que será consumida por un front end.
 
@@ -369,7 +371,7 @@ Luego se le proporcionará el método con el que se desea trabajar, en este caso
 
 ---
 
-### Controladores
+## Controladores
 
 Será la parte que va a contener la lógica de la aplicación, es donde va a finalizar el usuario, donde se conectará a la base de datos.
 
@@ -445,7 +447,7 @@ Para que trabaje con objetos JSON mediante express
 
 ---
 
-### Cargar archivos
+## Cargar archivos
 
 Lo primero que se necesita es una dependencia llamada multer (previamente instalada).
 
@@ -718,7 +720,7 @@ Así el código final del handleStorage, el controller del storage, la ruta de s
 
 ---
 
-### Validaciones (validators)
+## Validaciones (validators)
 
 Lo primero que se hará es instalar el paquete de express-validator desde la consola
 
