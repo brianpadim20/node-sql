@@ -720,3 +720,116 @@ Así el código final del handleStorage, el controller del storage, la ruta de s
 
 ### Validaciones (validators)
 
+Lo primero que se hará es instalar el paquete de express-validator desde la consola
+
+    npm install express-validator --save
+
+Esto es un paquete diseñado para express que funciona como una especie de middleware, el cual se va a encargar de hacer un filtro de que la data que se está enviado llegue al controlado curada
+
+Luego de instalado este paquete, se crea una nueva carpeta llamada validators; para llevar una estructura que se entienda, se van a crear los validadores con el nombre del modelo que se esté utilizando; para este ejemplo se creará tracks.js dentro de esta carpeta de validators.
+
+Por lo que se abre el modelo con el cual se trabaja (para este ejemplo se usará el de tracks)
+
+Se crea una constante de check que requiera a express-validator, y luego se declara una validación para un item creado. Una vez teniendo el validador, se necesita devolver una respuesta, pues esto es un middleware y se exporta, el código queda de la siguiente manera:
+
+    const { check } = require ("express-validator");
+
+    // Crear un objeto por cada middleware que se vaya a utilizar
+
+    /**
+    * Se debe guiar del modelo
+    */
+    const validatorCreateItem = [
+        check("name")
+        .exists()
+        .notEmpty(),
+        //Si se quiere tener una longitud específica: .isLength({min:3, max:90})
+        check("album")
+        .exists()
+        .notEmpty(),
+
+        check("cover")
+        .exists()
+        .notEmpty(),
+        check("artist.name")
+        .exists()
+        .notEmpty(),
+
+        check("artist.nickname")
+        .exists()
+        .notEmpty(),
+
+        check("artist.nationality")
+        .exists()
+        .notEmpty(),
+
+        check("cover")
+        .exists()
+        .notEmpty(),
+
+        check("duration.start")
+        .exists()
+        .notEmpty(),
+
+        check("duration.end")
+        .exists()
+        .notEmpty(),
+
+        check("mediaId")
+        .exists()
+        .notEmpty()
+        .isMongoId()
+
+        (req, res, next) => {
+            return validationResults(req, res, next)
+        }
+        
+    ]
+
+    export { validatorCreateItem }
+
+Crear en el archivo de útiles se crea un nuevo archivo llamado handleValidator.js y se le agrega el siguiente código:
+
+    const {validationResult} = require("express-validator")
+
+    const validationResults = (req, res, next) =>{
+        try{
+            validationResult(req).throw()//Valida lo que se está pasando por la petición, si no cumple ve al catch
+            return next() //Continúa hacia el controlador
+            
+        } catch(err) {
+            res.status(403)
+            res.send({errors: err.array()})
+            
+        }
+
+    }
+
+    module.exports = validationResults
+
+Para validar que funciona se necesita ir a la ruta de tracks y decirle :
+
+    const { validatorCreateItem } = require("../validators/tracks");
+
+Esto se le va a colocar en la petición post, que es la validación que se realiza al momento de crear un nuevo registro, la ruta quedaría así:
+
+    router.post("/", validatorCreateItem,createItem);
+
+Luego ir a postman, guardar un archivo cualquiera, tener su id para el mediaid, luego hacer una nueva solicitud en post, click en body, raw y seleccionar el estilo json en lugar de text y poner un código así:
+
+    {
+    "name":"Brian Andrés",
+    "album":"Burzum war",
+    "cover":"http://tttt.com",
+    "artist":{
+        "name":"Brian",
+        "nickname":"burzum war",
+        "nationality":"CO"
+    },
+    "duration":{
+        "start":1,
+        "end":15
+    },
+    "mediaId":"653d3da9189df2097827e943",
+
+
